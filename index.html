@@ -23,14 +23,21 @@
   </style>
 </head>
 <body>
+  <div id="log">Loading...</div>
 
-  <video id="video" controls></video>
+  <video id="video" controls autoplay></video>
 
   <script>
+    const log = document.getElementById('log');
     const video = document.getElementById('video');
 
     async function start() {
       const infoResponse = await fetch('./info.json');
+
+      if (!infoResponse.ok) {
+        log.textContent = 'Missing info.json';
+        return;
+      }
 
       const info = await infoResponse.json();
 
@@ -39,10 +46,19 @@
       for (let i = 0; i < info.totalChunks; i++) {
         const filename = `part${String(i).padStart(4, '0')}.txt`;
 
+        log.textContent = `Downloading ${filename}...`;
+
         const response = await fetch('./' + filename);
+
+        if (!response.ok) {
+          log.textContent = `Missing ${filename}`;
+          return;
+        }
 
         buffers.push(await response.arrayBuffer());
       }
+
+      log.textContent = 'Assembling...';
 
       const blob = new Blob(buffers, {
         type: info.mimeType || 'video/mp4'
@@ -53,7 +69,8 @@
       video.src = url;
 
       await video.play().catch(() => {});
-      
+
+      log.textContent = 'Loaded.';
     }
 
     start();
