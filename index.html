@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Video Assembler</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      padding: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    video {
+      margin-top: 20px;
+      max-width: 100%;
+    }
+
+    #log {
+      margin-top: 20px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Video Assembler</h1>
+
+  <input type="file" id="infoInput" accept=".json">
+  <br>
+  <button id="assembleBtn">Assemble Video</button>
+
+  <div id="log"></div>
+
+  <video id="video" controls></video>
+
+  <script>
+    const infoInput = document.getElementById('infoInput');
+    const assembleBtn = document.getElementById('assembleBtn');
+    const log = document.getElementById('log');
+    const video = document.getElementById('video');
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    assembleBtn.onclick = async () => {
+      const infoFile = infoInput.files[0];
+
+      if (!infoFile) {
+        alert('Select the .info.json file first');
+        return;
+      }
+
+      const infoText = await infoFile.text();
+      const info = JSON.parse(infoText);
+
+      const basePath = './';
+
+      
+
+      
+
+      const partFiles = [];
+
+      for (let i = 0; i < info.totalChunks; i++) {
+        const filename = `${info.originalName}.part${String(i).padStart(4, '0')}`;
+
+        log.textContent += `Downloading ${filename}
+`;
+
+        const response = await fetch(basePath + filename);
+
+        if (!response.ok) {
+          alert(`Missing chunk: ${filename}`);
+          return;
+        }
+
+        const buffer = await response.arrayBuffer();
+        partFiles.push(buffer);
+      } chunks, got ${partFiles.length}`);
+        return;
+      }
+
+      log.textContent = 'Assembling...\n';
+
+      const buffers = partFiles;
+
+      const blob = new Blob(buffers, {
+        type: 'video/mp4'
+      });
+
+      const url = URL.createObjectURL(blob);
+
+      video.src = url;
+
+      downloadBlob(blob, info.originalName);
+
+      log.textContent += '\nDone!';
+    };
+  </script>
+</body>
+</html>
